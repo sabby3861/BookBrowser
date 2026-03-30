@@ -8,8 +8,8 @@
 import Foundation
 import Network
 
-/// Lightweight wrapper around `NWPathMonitor` that publishes
-/// connectivity state as a simple boolean.`.
+/// Wrapper around 'NWPathMonitor' that publishes
+/// connectivity state as  boolean.
 @MainActor
 @Observable
 final class NetworkMonitor {
@@ -28,8 +28,6 @@ final class NetworkMonitor {
     deinit {
         monitor.cancel()
     }
-    
-    // MARK: - Private
     
     private func startMonitoring() {
         monitor.pathUpdateHandler = { [weak self] path in

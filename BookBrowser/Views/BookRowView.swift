@@ -12,6 +12,7 @@ import SwiftUI
 struct BookRowView: View {
     
     let book: Work
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     var body: some View {
         AdaptiveHStack {
@@ -36,12 +37,14 @@ struct BookRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(book.title)
                 .font(.headline)
-                .lineLimit(2)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 4 : 2)
+                .minimumScaleFactor(0.9)
             
             Text(book.displayAuthor)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
+                .minimumScaleFactor(0.9)
         }
     }
 }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BookListView: View {
     
-    @StateObject var viewModel: BookListViewModel
+    @State var viewModel: BookListViewModel
     @State private var networkMonitor = NetworkMonitor()
     
     var body: some View {
@@ -61,7 +61,7 @@ struct BookListView: View {
     // MARK: - Offline Banner
     
     private var showOfflineBanner: Bool {
-        // Don't show "Showing cached results" while actively refreshing —
+        // Don't show "Showing cached results" text while actively refreshing —
         // the user just pulled to refresh, they know it's updating.
         guard !viewModel.isRefreshing else { return false }
         return !networkMonitor.isConnected || viewModel.dataSource == .cache

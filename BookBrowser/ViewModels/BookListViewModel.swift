@@ -30,11 +30,11 @@ enum DataSource: Sendable {
 /// refreshes and updates the list when fresh data arrives.
 /// Pull-to-refresh: always hits the network with a visible spinner.
 @MainActor
-final class BookListViewModel: ObservableObject {
+final class BookListViewModel {
     
-    @Published private(set) var state: BookListState = .idle
-    @Published private(set) var dataSource: DataSource = .network
-    @Published private(set) var isRefreshing = false
+    private(set) var state: BookListState = .idle
+    private(set) var dataSource: DataSource = .network
+    private(set) var isRefreshing = false
     
     private let bookService: any BookServiceProtocol
     private let cacheService: any CacheServiceProtocol<Work>
@@ -59,15 +59,13 @@ final class BookListViewModel: ObservableObject {
         await refreshFromNetwork(showLoading: !hasCachedData)
     }
     
-    /// Called on pull-to-refresh. Always shows the loading indicator
-    /// and hits the network.
+    /// Called on pull-to-refresh. Always hits the network.
     func refreshBooks() async {
         await refreshFromNetwork(showLoading: false)
     }
     
     // MARK: - Private
     
-    /// Returns `true` if cache had usable data.
     @discardableResult
     private func loadFromCache() -> Bool {
         do {

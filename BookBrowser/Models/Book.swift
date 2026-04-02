@@ -15,11 +15,8 @@ struct SubjectResponse: Codable, Sendable, Equatable {
 
 // MARK: - Work
 
-/// A single book entry from the Open Library API.
-///
-/// The subjects endpoint returns a `key` per work (e.g. "/works/OL27482W")
-/// which provides a stable unique identifier — far safer than deriving
-/// identity from title+author, which can collide across editions.
+/// Uses the API's `key` field as stable identity — title+author
+/// would collide across editions of the same book.
 struct Work: Codable, Sendable, Hashable, Identifiable {
     let key: String
     let title: String
@@ -28,17 +25,13 @@ struct Work: Codable, Sendable, Hashable, Identifiable {
     
     var id: String { key }
     
-    /// Joins multiple author names for display. Falls back gracefully
-    /// rather than leaving the label blank.
     var displayAuthor: String {
         guard !authors.isEmpty else { return "Unknown Author" }
         return authors.map(\.name).joined(separator: ", ")
     }
     
-    /// Constructs the Open Library cover image URL at medium resolution.
-    /// Returns `nil` when the API didn't supply a cover ID.
     var coverURL: URL? {
-        coverID.flatMap { URL(string: "https://covers.openlibrary.org/b/id/\($0)-M.jpg") }
+        coverID.flatMap { Endpoint.coverImageURL(coverID: $0) }
     }
     
     enum CodingKeys: String, CodingKey {

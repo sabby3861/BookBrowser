@@ -8,8 +8,8 @@
 import Foundation
 import Network
 
-/// Wrapper around 'NWPathMonitor' that publishes
-/// connectivity state as  boolean.
+/// Wraps `NWPathMonitor` to publish connectivity state as a simple boolean.
+/// Runs on a dedicated serial queue, dispatches updates back to `@MainActor`.
 @MainActor
 @Observable
 final class NetworkMonitor {
@@ -23,8 +23,7 @@ final class NetworkMonitor {
         startMonitoring()
     }
     
-    /// `NWPathMonitor.cancel()` is documented as thread-safe,
-    /// so calling it from deinit (which runs outside actor isolation) is safe.
+    /// `NWPathMonitor.cancel()` is thread-safe, safe to call from deinit.
     deinit {
         monitor.cancel()
     }

@@ -6,8 +6,9 @@
 //
 
 import Foundation
-/// Produces a fully configured `URLRequest`
-/// Adding a new endpoint is a static factory method.
+
+/// Builds a full URLRequest from path + query params + headers.
+/// New endpoints are just static factory methods.
 struct Endpoint: Sendable {
     
     enum HTTPMethod: String, Sendable {
@@ -68,4 +69,11 @@ extension Endpoint {
             queryItems: [URLQueryItem(name: "limit", value: "\(limit)")]
         )
     }
+    
+    /// Cover image URL from the Open Library Covers API.
+    /// Separate host from the main API, but keeping all OL URLs together.
+    static func coverImageURL(coverID: Int, size: String = "M") -> URL? {
+        URL(string: "https://covers.openlibrary.org/b/id/\(coverID)-\(size).jpg")
+    }
 }
+

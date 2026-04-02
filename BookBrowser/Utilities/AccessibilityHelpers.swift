@@ -86,7 +86,7 @@ extension View {
 // MARK: - Adaptive Layout
 
 /// HStack at normal sizes, VStack at accessibility sizes.
-struct AdaptiveBookRowLayout<Content: View>: View {
+struct AdaptiveHStack<Content: View>: View {
     
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let content: () -> Content
@@ -107,4 +107,3 @@ struct AdaptiveBookRowLayout<Content: View>: View {
         }
     }
 }
-

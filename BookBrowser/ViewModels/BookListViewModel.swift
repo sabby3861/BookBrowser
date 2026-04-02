@@ -21,17 +21,23 @@ enum DataSource: Sendable {
 
 // MARK: - BookListViewModel
 
-/// Tries the network first, falls back to cache, surfaces a friendly
-/// error if both fail. `@MainActor` so all @Published writes are safe.
+/// Shows cached data instantly, then refreshes from the network in the
+/// background. This avoids a 2-4 second loading spinner on every launch
+/// just because the Open Library API is slow.
+///
+/// First launch (no cache): shows loading → fetches from network.
+/// Subsequent launches: shows cached books immediately → silently
+/// refreshes and updates the list when fresh data arrives.
+/// Pull-to-refresh: always hits the network with a visible spinner.
 @MainActor
 final class BookListViewModel: ObservableObject {
     
     @Published private(set) var state: BookListState = .idle
     @Published private(set) var dataSource: DataSource = .network
+    @Published private(set) var isRefreshing = false
     
     private let bookService: any BookServiceProtocol
     private let cacheService: any CacheServiceProtocol<Work>
-    private var isFetching = false
     
     init(
         bookService: any BookServiceProtocol,
@@ -43,12 +49,46 @@ final class BookListViewModel: ObservableObject {
     
     // MARK: - Public
     
-    func fetchBooks() async {
-        guard !isFetching else { return }
-        isFetching = true
-        defer { isFetching = false }
+    /// Called on initial launch. Shows cache immediately if available,
+    /// then refreshes from the network in the background.
+    func loadBooks() async {
+        // Show cached data right away so the user isn't staring at a spinner
+        let hasCachedData = loadFromCache()
         
-        state = .loading
+        // Then refresh from network
+        await refreshFromNetwork(showLoading: !hasCachedData)
+    }
+    
+    /// Called on pull-to-refresh. Always shows the loading indicator
+    /// and hits the network.
+    func refreshBooks() async {
+        await refreshFromNetwork(showLoading: false)
+    }
+    
+    // MARK: - Private
+    
+    /// Returns `true` if cache had usable data.
+    @discardableResult
+    private func loadFromCache() -> Bool {
+        do {
+            let cachedBooks = try cacheService.load()
+            guard !cachedBooks.isEmpty else { return false }
+            state = .loaded(cachedBooks)
+            dataSource = .cache
+            return true
+        } catch {
+            return false
+        }
+    }
+    
+    private func refreshFromNetwork(showLoading: Bool) async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
+        
+        if showLoading {
+            state = .loading
+        }
         
         do {
             let books = try await bookService.fetchBooks()
@@ -56,25 +96,12 @@ final class BookListViewModel: ObservableObject {
             dataSource = .network
             persistToCache(books)
         } catch is CancellationError {
-            return // View disappeared, don't write stale state
+            return
         } catch {
-            loadFromCacheOrFail(networkError: error)
-        }
-    }
-    
-    // MARK: - Private
-    
-    private func loadFromCacheOrFail(networkError: Error) {
-        do {
-            let cachedBooks = try cacheService.load()
-            guard !cachedBooks.isEmpty else {
-                state = .error(friendlyMessage(for: networkError))
-                return
-            }
-            state = .loaded(cachedBooks)
-            dataSource = .cache
-        } catch {
-            state = .error(friendlyMessage(for: networkError))
+            // If we already have cached data on screen, don't replace it
+            // with an error. Only show error if there's nothing to display.
+            if case .loaded = state { return }
+            state = .error(friendlyMessage(for: error))
         }
     }
     

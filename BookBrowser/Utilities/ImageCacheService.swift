@@ -27,10 +27,10 @@ actor ImageCacheService {
         diskCacheDirectory = fileManager
             .urls(for: .cachesDirectory, in: .userDomainMask)
             .first?
-            .appendingPathComponent("CoverImages", isDirectory: true)
+            .appending(component: "CoverImages", directoryHint: .isDirectory)
         
         if let directory = diskCacheDirectory,
-           !fileManager.fileExists(atPath: directory.path) {
+           !fileManager.fileExists(atPath: directory.path()) {
             try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         }
     }
@@ -88,7 +88,7 @@ actor ImageCacheService {
         guard let directory = diskCacheDirectory else { return nil }
         let digest = SHA256.hash(data: Data(url.absoluteString.utf8))
         let filename = digest.map { String(format: "%02x", $0) }.joined()
-        return directory.appendingPathComponent(filename)
+        return directory.appending(path: filename)
     }
     
     private func loadFromDisk(for url: URL) -> UIImage? {
@@ -104,3 +104,4 @@ actor ImageCacheService {
         try? data.write(to: path, options: .atomic)
     }
 }
+

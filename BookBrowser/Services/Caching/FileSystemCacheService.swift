@@ -45,7 +45,7 @@ final class FileSystemCacheService<Item: Codable & Sendable>: CacheServiceProtoc
     func load() throws -> [Item] {
         let url = try cacheFileURL()
         
-        guard fileManager.fileExists(atPath: url.path) else {
+        guard fileManager.fileExists(atPath: url.path()) else {
             throw CacheError.noCache
         }
         
@@ -59,7 +59,7 @@ final class FileSystemCacheService<Item: Codable & Sendable>: CacheServiceProtoc
     
     func clear() throws {
         let url = try cacheFileURL()
-        guard fileManager.fileExists(atPath: url.path) else { return }
+        guard fileManager.fileExists(atPath: url.path()) else { return }
         try fileManager.removeItem(at: url)
     }
     
@@ -72,6 +72,6 @@ final class FileSystemCacheService<Item: Codable & Sendable>: CacheServiceProtoc
         ).first else {
             throw CacheError.writeFailed("Caches directory not found.")
         }
-        return cachesDir.appendingPathComponent(cacheFileName)
+        return cachesDir.appending(path: cacheFileName)
     }
 }

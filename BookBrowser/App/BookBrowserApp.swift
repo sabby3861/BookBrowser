@@ -11,7 +11,12 @@ import SwiftUI
 struct BookBrowserApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            BookListView(
+                viewModel: BookListViewModel(
+                    bookService: OpenLibraryBookService(),
+                    cacheService: FileSystemCacheService<Work>(cacheFileName: "cached_books.json")
+                )
+            )
         }
     }
 }

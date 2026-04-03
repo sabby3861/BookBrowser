@@ -23,11 +23,10 @@ enum DataSource: Sendable {
 
 /// Shows cached data instantly, then refreshes from the network in the
 /// background. This avoids a 2-4 second loading spinner on every launch
-/// just because the Open Library API is slow.
+/// seems like the Open Library API is slow, even on the web page, it loads slow
 ///
 /// First launch (no cache): shows loading → fetches from network.
-/// Subsequent launches: shows cached books immediately → silently
-/// refreshes and updates the list when fresh data arrives.
+/// Subsequent launches: shows cached books immediately
 /// Pull-to-refresh: always hits the network with a visible spinner.
 @MainActor
 final class BookListViewModel {

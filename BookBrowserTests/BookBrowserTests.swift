@@ -30,8 +30,6 @@ struct BookListViewModelTests {
         #expect(sut.isRefreshing == false)
     }
     
-    // MARK: - loadBooks (initial launch)
-    
     @Test("First launch, no cache → shows loading then network result")
     func firstLaunch_noCacheShowsLoading() async {
         mockService.stubbedResult = .success(TestFixtures.sampleBooks)
@@ -50,7 +48,6 @@ struct BookListViewModelTests {
         
         await sut.loadBooks()
         
-        // After loadBooks completes, network data should replace cache
         #expect(sut.state == .loaded(TestFixtures.sampleBooks))
         #expect(sut.dataSource == .network)
     }
@@ -62,7 +59,6 @@ struct BookListViewModelTests {
         
         await sut.loadBooks()
         
-        // Cache data stays on screen, network failure is silent
         #expect(sut.state == .loaded(TestFixtures.singleBook))
         #expect(sut.dataSource == .cache)
     }
@@ -90,8 +86,6 @@ struct BookListViewModelTests {
         #expect(mockCache.storedItems == TestFixtures.sampleBooks)
     }
     
-    // MARK: - refreshBooks (pull-to-refresh)
-    
     @Test("Refresh hits network directly")
     func refresh_hitsNetwork() async {
         mockService.stubbedResult = .success(TestFixtures.sampleBooks)
@@ -102,8 +96,6 @@ struct BookListViewModelTests {
         #expect(sut.dataSource == .network)
         #expect(mockService.fetchCallCount == 1)
     }
-    
-    // MARK: - Error messages
     
     @Test("Server 503 → shows status code")
     func serverError_showsCode() async {
@@ -131,8 +123,6 @@ struct BookListViewModelTests {
         #expect(message.contains("updating"))
     }
     
-    // MARK: - Edge cases
-    
     @Test("Empty cache counts as no cache")
     func emptyCacheIsFailure() async {
         mockCache.storedItems = []
@@ -154,23 +144,18 @@ struct BookListViewModelTests {
         async let second: Void = sut.loadBooks()
         _ = await (first, second)
         
-        // Network should only be hit once
         #expect(mockService.fetchCallCount == 1)
     }
     
-    @Test("Cancellation bails without touching state")
+    @Test("Cancellation does not produce error state")
     func cancellation() async {
         mockService.stubbedResult = .failure(CancellationError())
         
         await sut.loadBooks()
         
-        // No cached data, network cancelled — state stays at loading
-        // (not an error, because cancellation is not a real failure)
-        guard case .error = sut.state else {
-            // Loading or idle is acceptable — not error
-            return
+        if case .error = sut.state {
+            Issue.record("Cancellation should not produce an error, got \(sut.state)")
         }
-        Issue.record("Cancellation should not produce an error state")
     }
 }
 
@@ -372,4 +357,3 @@ struct ErrorTests {
         #expect(CacheError.noCache != CacheError.writeFailed("disk full"))
     }
 }
-

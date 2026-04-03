@@ -61,8 +61,7 @@ struct BookListView: View {
     // MARK: - Offline Banner
     
     private var showOfflineBanner: Bool {
-        // Don't show "Showing cached results" text while actively refreshing —
-        // the user just pulled to refresh, they know it's updating.
+        // Don't show "Showing cached results" text while user pull to refresh
         guard !viewModel.isRefreshing else { return false }
         return !networkMonitor.isConnected || viewModel.dataSource == .cache
     }
